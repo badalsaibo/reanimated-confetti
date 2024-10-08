@@ -1,5 +1,10 @@
-import { Text } from 'react-native';
+import { View } from 'react-native';
+import Confetti from './src/components/confettis.component';
 
 export default function App() {
-  return <Text>Hello</Text>;
+  return (
+    <View>
+      <Confetti />
+    </View>
+  );
 }
