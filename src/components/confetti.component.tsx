@@ -1,8 +1,5 @@
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import React, { useEffect } from 'react';
+import { Animated } from 'react-native';
 import ConfettiIcon from '../svg/confetti.svg';
 
 type ConfettiProps = {
@@ -26,33 +23,52 @@ const Confetti = ({
   xVel,
   yVel,
 }: ConfettiProps) => {
-  const sharedX = useSharedValue(x);
-  const sharedY = useSharedValue(y);
-  const sharedAngle = useSharedValue(angle);
+  const animatedX = new Animated.Value(x);
+  const animatedY = new Animated.Value(y);
+  const animatedAngle = new Animated.Value(angle);
 
-  // const dt = useDerivedValue(() => clock.value / 1000);
-
-  // const dx = useDerivedValue(() => dt.value * xVel);
-  // const dy = useDerivedValue(() => dt.value * yVel);
-  // const dAngle = useDerivedValue(() => dt.value * angleVel);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    // Simulate confetti falling and bouncing
-    sharedX.value = withTiming(sharedX.value + xVel * 0.01, { duration: 16 });
-
-    sharedY.value = withTiming(sharedY.value + yVel * 0.01, { duration: 16 });
-    sharedAngle.value = withTiming(sharedAngle.value + angleVel * 0.01, {
-      duration: 16,
-    });
-
-    return {
-      transform: [
-        { translateX: sharedX.value },
-        { translateY: sharedY.value },
-        { rotate: `${sharedAngle.value}rad` },
-      ],
+  useEffect(() => {
+    const animate = () => {
+      Animated.parallel([
+        Animated.timing(animatedX, {
+          toValue: animatedX._value + xVel * 0.01,
+          duration: 16,
+          useNativeDriver: true, // Using native driver for performance
+        }),
+        Animated.timing(animatedY, {
+          toValue: animatedY._value + yVel * 0.01,
+          duration: 16,
+          useNativeDriver: true, // Using native driver for performance
+        }),
+        Animated.timing(animatedAngle, {
+          toValue: animatedAngle._value + angleVel * 0.01,
+          duration: 16,
+          useNativeDriver: true, // Using native driver for performance
+        }),
+      ]).start(() => animate()); // Start the animation again when it finishes
     };
-  });
+
+    animate(); // Start the animation loop
+
+    return () => {
+      animatedX.stop(); // Stop the animation on unmount
+      animatedY.stop();
+      animatedAngle.stop();
+    };
+  }, [animatedX, animatedY, animatedAngle, xVel, yVel, angleVel]);
+
+  const animatedStyle = {
+    transform: [
+      { translateX: animatedX },
+      { translateY: animatedY },
+      {
+        rotate: animatedAngle.interpolate({
+          inputRange: [0, 2 * Math.PI],
+          outputRange: ['0rad', '2rad'],
+        }),
+      },
+    ],
+  };
 
   return (
     <Animated.View
